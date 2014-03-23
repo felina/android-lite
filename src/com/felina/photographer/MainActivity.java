@@ -47,7 +47,7 @@ public class MainActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-				getToken();
+				getToken(Constants.RETRY_LIMIT);
 			}
 		});
 		
@@ -57,12 +57,11 @@ public class MainActivity extends Activity {
 		
 		if (savedInstanceState != null) {
 			EMAIL = savedInstanceState.getString(Extra.EMAIL_PREF);
-			TOKEN = savedInstanceState.getString(Extra.TOKEN_PREF);
-			startCamera();
 		} else {
 			EMAIL = new UUIDFactory(this).getDeviceUUID() + Constants.DOMAIN;
-			setToken();
 		}
+		
+		setToken();
 	}
 	
 	/**
@@ -74,14 +73,16 @@ public class MainActivity extends Activity {
 		if(TOKEN == null) {
 			synchronized (MainActivity.class) {
 				SharedPreferences prefs = getSharedPreferences(Extra.TOKEN_PREF_FILE, MODE_PRIVATE);
-				TOKEN = prefs.getString(Extra.TOKEN_PREF, null);			
-				if(TOKEN == null) {
-					getToken();
+				TOKEN = prefs.getString(Extra.TOKEN_PREF, Constants.NULL_TOKEN);			
+				if(TOKEN.equals(Constants.NULL_TOKEN)) {
+					TOKEN = null;
+					getToken(Constants.RETRY_LIMIT);
 				} else {
 					startCamera();
 				}
 			}
 		} else {
+			Log.d(LOG_TAG, TOKEN);
 			startCamera();
 		}
 	}
@@ -90,8 +91,12 @@ public class MainActivity extends Activity {
 	 * Requests a token from the server
 	 * Failing that it displays the UUID
 	 */
-	private void getToken() {
+	private void getToken(final int retry) {
 		Log.d(LOG_TAG, "getToken");
+		if (retry == 0) {
+			Log.d(LOG_TAG, "token retry limit reached");
+			return;
+		}
 		fClient.token(EMAIL, new JsonHttpResponseHandler(){
 			@Override
 			public void onSuccess(JSONObject response) {
@@ -105,12 +110,14 @@ public class MainActivity extends Activity {
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
+					getToken(retry-1);
 				}
 			}
 			
 			@Override
 			public void onFailure(Throwable e, JSONObject errorResponse) {
 				e.printStackTrace();
+				getToken(retry-1);
 			}
 		});
 	}
@@ -173,13 +180,38 @@ public class MainActivity extends Activity {
 		uuidText.setText(EMAIL);
 		uuidText.setVisibility(View.VISIBLE);
 		nextButton.setVisibility(View.VISIBLE);
+		saveToken(Constants.NULL_TOKEN);
 	}
 	
 	/**
 	 * uploads the image to the server
 	 */
-	private void uploadImage() {
+	private void uploadImage(final int retry) {
+		Log.d(LOG_TAG, "uploadImage");
+		if (retry == 0){
+			return;
+		}
 		
+		fClient.login(EMAIL, TOKEN, new JsonHttpResponseHandler(){
+			@Override
+			public void onSuccess(JSONObject response) {
+				try {
+					if (response.getBoolean("res")) {
+						startCamera();
+					} else {
+						showUUID();
+					}
+				} catch (JSONException e) {
+					e.printStackTrace();
+					uploadImage(retry-1);
+				}
+			}
+			
+			@Override
+			public void onFailure(Throwable e, JSONObject errorResponse) {
+				uploadImage(retry-1);
+			}
+		});
 	}
 	
 	@Override
@@ -187,6 +219,7 @@ public class MainActivity extends Activity {
 		if (requestCode == Constants.REQUEST_IMAGE_CAPTURE) {
 			switch (resultCode) {
 			case RESULT_OK:
+				uploadImage(Constants.RETRY_LIMIT);
 				break;
 			case RESULT_CANCELED: finish();
 				break;
@@ -197,9 +230,7 @@ public class MainActivity extends Activity {
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		outState.putString(Extra.EMAIL_PREF, EMAIL);
-		outState.putString(Extra.TOKEN_PREF, TOKEN);
-		
+		outState.putString(Extra.EMAIL_PREF, EMAIL);	
 		super.onSaveInstanceState(outState);
 	}
 	
