@@ -22,7 +22,7 @@ public class UUIDFactory {
 		if(uuid == null) {
 			synchronized (UUIDFactory.class) {
 				if(uuid == null) {
-					final SharedPreferences prefs = context.getSharedPreferences(Extra.UUID_PREF_FILE, 0);
+					final SharedPreferences prefs = context.getSharedPreferences(Extra.UUID_PREF_FILE, context.MODE_PRIVATE);
 					final String id = prefs.getString(Extra.UUID_PREF, null);
 					if (id != null) {
 						uuid = UUID.fromString(id);
