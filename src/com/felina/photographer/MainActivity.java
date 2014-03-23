@@ -166,7 +166,7 @@ public class MainActivity extends Activity {
 	 */
 	private File createFile() throws IOException {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+		File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 		File image = new File(dir, timeStamp+".jpg");
 		return image;
 	}
@@ -186,9 +186,10 @@ public class MainActivity extends Activity {
 	/**
 	 * uploads the image to the server
 	 */
-	private void uploadImage(final int retry) {
+	private void uploadImage(final int retry, final File f) {
 		Log.d(LOG_TAG, "uploadImage");
 		if (retry == 0){
+			Log.d(LOG_TAG, "uploadImage retry limit reached");
 			return;
 		}
 		
@@ -197,35 +198,56 @@ public class MainActivity extends Activity {
 			public void onSuccess(JSONObject response) {
 				try {
 					if (response.getBoolean("res")) {
+						startUpload(Constants.RETRY_LIMIT, f);
 						startCamera();
 					} else {
 						showUUID();
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
-					uploadImage(retry-1);
+					uploadImage(retry-1, f);
 				}
 			}
 			
 			@Override
 			public void onFailure(Throwable e, JSONObject errorResponse) {
-				uploadImage(retry-1);
+				uploadImage(retry-1, f);
+			}
+		});
+	}
+	
+	private void startUpload(final int retry, final File f) {
+		Log.d(LOG_TAG, "startUpload");
+		if (retry == 0) {
+			Log.d(LOG_TAG, "startUpload retry limit reached");
+			return;
+		}
+		
+		fClient.postImg(f, "image/jpeg", new JsonHttpResponseHandler(){
+			@Override
+			public void onSuccess(JSONObject response) {
+				Log.d(LOG_TAG, "startUpload success");
+			}
+			
+			@Override
+			public void onFailure(Throwable e, JSONObject errorResponse) {
+				startUpload(retry-1, f);
 			}
 		});
 	}
 	
 	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (requestCode == Constants.REQUEST_IMAGE_CAPTURE) {
 			switch (resultCode) {
 			case RESULT_OK:
-				uploadImage(Constants.RETRY_LIMIT);
+				uploadImage(Constants.RETRY_LIMIT, imageFile);
 				break;
 			case RESULT_CANCELED: finish();
 				break;
 			}
 		}
-		super.onActivityResult(requestCode, resultCode, data);
+		super.onActivityResult(requestCode, resultCode, intent);
 	}
 	
 	@Override
