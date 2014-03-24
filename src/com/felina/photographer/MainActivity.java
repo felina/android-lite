@@ -35,6 +35,7 @@ public class MainActivity extends Activity {
 	private TextView uuidText;
 	private Button nextButton;
 	private File imageFile;
+	private View loadingBar;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +44,7 @@ public class MainActivity extends Activity {
 		
 		uuidText = (TextView) findViewById(R.id.uuidTxt);
 		nextButton = (Button) findViewById(R.id.nextBtn);
+		loadingBar = findViewById(R.id.loadingPanel);
 		nextButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -140,8 +142,9 @@ public class MainActivity extends Activity {
 	private void startCamera() {
 		Log.d(LOG_TAG, "Starting camera");
 		SHOW_UUID = false;
-		uuidText.setVisibility(View.INVISIBLE);
-		nextButton.setVisibility(View.INVISIBLE);
+		uuidText.setVisibility(View.GONE);
+		nextButton.setVisibility(View.GONE);
+		loadingBar.setVisibility(View.VISIBLE);
 		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		
 		if(intent.resolveActivity(getPackageManager()) != null) {
@@ -180,6 +183,7 @@ public class MainActivity extends Activity {
 		uuidText.setText(EMAIL);
 		uuidText.setVisibility(View.VISIBLE);
 		nextButton.setVisibility(View.VISIBLE);
+		loadingBar.setVisibility(View.GONE);
 		saveToken(Constants.NULL_TOKEN);
 	}
 	

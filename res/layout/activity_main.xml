@@ -6,21 +6,34 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:background="@color/light_blue_login"
     tools:context=".MainActivity" >
 
     <TextView
         android:id="@+id/uuidTxt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
         android:text="@string/hello_world"
-        android:visibility="invisible" />
+        android:visibility="gone"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:layout_marginBottom="24dp"/>
     
     <Button 
         android:id="@+id/nextBtn"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
 		android:layout_below="@id/uuidTxt"
+		android:layout_centerInParent="true"
         android:text="@string/next"
-        android:visibility="invisible"/>
+        android:visibility="gone"/>
+    
+    <RelativeLayout
+    	style="@style/GenericProgressBackground"
+    	android:id="@+id/loadingPanel">
+    	<ProgressBar
+        	style="@style/GenericProgressIndicator"/>
+	</RelativeLayout>
 
 </RelativeLayout>
