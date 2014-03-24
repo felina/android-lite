@@ -31,7 +31,6 @@ public class MainActivity extends Activity {
 	private static String EMAIL;
 	private static String TOKEN;
 	private static FelinaClient fClient;
-	private static Boolean SHOW_UUID = false;
 	private TextView uuidText;
 	private Button nextButton;
 	private File imageFile;
@@ -141,7 +140,6 @@ public class MainActivity extends Activity {
 	 */
 	private void startCamera() {
 		Log.d(LOG_TAG, "Starting camera");
-		SHOW_UUID = false;
 		uuidText.setVisibility(View.GONE);
 		nextButton.setVisibility(View.GONE);
 		loadingBar.setVisibility(View.VISIBLE);
@@ -179,7 +177,6 @@ public class MainActivity extends Activity {
 	 */
 	private void showUUID() {
 		Log.d(LOG_TAG, "Showing UUID");
-		SHOW_UUID = true;
 		uuidText.setText(EMAIL);
 		uuidText.setVisibility(View.VISIBLE);
 		nextButton.setVisibility(View.VISIBLE);
