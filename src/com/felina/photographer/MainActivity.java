@@ -52,6 +52,12 @@ public class MainActivity extends Activity {
 			}
 		});
 		
+		File storagePath = new File(Environment.getExternalStorageDirectory() + File.separator + Constants.STORAGE_FOLDER);
+		if (!storagePath.exists()) {
+			Log.d(LOG_TAG, "storagePath does not exist");
+			storagePath.mkdirs();
+		}
+		
 		if(fClient == null) {
 			fClient = new FelinaClient(this);
 		}
@@ -167,7 +173,7 @@ public class MainActivity extends Activity {
 	 */
 	private File createFile() throws IOException {
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		File dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+		File dir = new File(Environment.getExternalStorageDirectory() + File.separator + Constants.STORAGE_FOLDER);
 		File image = new File(dir, timeStamp+".jpg");
 		return image;
 	}
@@ -228,6 +234,15 @@ public class MainActivity extends Activity {
 			@Override
 			public void onSuccess(JSONObject response) {
 				Log.d(LOG_TAG, "startUpload success");
+		        if (f.exists()) {
+		            if (f.delete()) {
+		        		Log.d(LOG_TAG, "file deleted");
+		            } else {
+		        		Log.d(LOG_TAG, "file not deleted");
+		            }
+		        }
+		        sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
+		        Uri.parse("file://" +  Environment.getExternalStorageDirectory())));
 			}
 			
 			@Override
