@@ -99,6 +99,7 @@ public class MainActivity extends Activity {
 		Log.d(LOG_TAG, "getToken");
 		if (retry == 0) {
 			Log.d(LOG_TAG, "token retry limit reached");
+			nextButton.setEnabled(true);
 			return;
 		}
 		
@@ -119,6 +120,7 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 					getToken(retry-1);
 				}
+				nextButton.setEnabled(true);
 			}
 			
 			@Override
