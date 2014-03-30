@@ -10,14 +10,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
-import android.util.Log;
 
 import com.felina.android.api.FelinaClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 public class UploadUtils {
 	
-	private static String LOG_TAG = Constants.LOG_TAG + ".UploadUtils";
 	private static FelinaClient fClient;
 	private static String EMAIL;
 	private static String TOKEN;
@@ -38,10 +36,8 @@ public class UploadUtils {
 	 * @param f file to be uploaded
 	 */
 	public static void start(Context context, File f) {
-		Log.d(LOG_TAG, "start");
 		checkStatics(context);
 		if (!STATE_BUSY && f != null && !TOKEN.equals(Constants.NULL_TOKEN)) {
-			Log.d(LOG_TAG, "not busy");
 			STATE_BUSY = true;
 			startUpload(context, Constants.RETRY_LIMIT, f);
 		}
@@ -54,12 +50,10 @@ public class UploadUtils {
 	 * @param f
 	 */
 	private static void startUpload(final Context context, final int retry, final File f) {
-		Log.d(LOG_TAG, "startUpload");
 		
 		checkStatics(context);
 		
 		if (retry == 0 || !NetworkUtil.isConnected(context) || TOKEN.equals(Constants.NULL_TOKEN)){
-			Log.d(LOG_TAG, "startUpload retry limit reached or not connected or null token");
 			STATE_BUSY = false;
 			return;
 		}
@@ -94,9 +88,7 @@ public class UploadUtils {
 	 * @param f the image to be uploaded
 	 */
 	private static void upload(final Context context, final int retry, final File f) {
-		Log.d(LOG_TAG, "upload");
 		if (retry == 0 || !NetworkUtil.isConnected(context)) {
-			Log.d(LOG_TAG, "upload retry limit reached or not connected");
 			STATE_BUSY = false;
 			return;
 		}
@@ -104,20 +96,14 @@ public class UploadUtils {
 		fClient.postImg(f, "image/jpeg", new JsonHttpResponseHandler(){
 			@Override
 			public void onSuccess(JSONObject response) {
-				Log.d(LOG_TAG, "upload success");
 		        if (f.exists()) {
-		            if (f.delete()) {
-		        		Log.d(LOG_TAG, "file deleted");
-		            } else {
-		        		Log.d(LOG_TAG, "file not deleted");
-		            }
+		        	f.delete();
 		        }
 		        context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
 		        Uri.parse("file://" +  Environment.getExternalStorageDirectory())));
 		        
 		        File next = getNextFile();
 		        if (next != null) {
-		        	Log.d(LOG_TAG, next.getAbsolutePath());
 		        	startUpload(context, Constants.RETRY_LIMIT, next);
 		        } else {
 		        	STATE_BUSY = false;	
