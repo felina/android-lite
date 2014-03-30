@@ -10,7 +10,6 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -180,79 +179,15 @@ public class MainActivity extends Activity {
 		TokenUtils.writeToken(this, Constants.NULL_TOKEN);
 	}
 	
-	/**
-	 * uploads the image to the server
-	 */
-	private void uploadImage(final int retry, final File f) {
-		Log.d(LOG_TAG, "uploadImage");
-		if (retry == 0){
-			Log.d(LOG_TAG, "uploadImage retry limit reached");
-			return;
-		}
-		
-		fClient.login(EMAIL, TOKEN, new JsonHttpResponseHandler(){
-			@Override
-			public void onSuccess(JSONObject response) {
-				try {
-					if (response.getBoolean("res")) {
-						startUpload(Constants.RETRY_LIMIT, f);
-						startCamera();
-					} else {
-						showUUID();
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-					uploadImage(retry-1, f);
-				}
-			}
-			
-			@Override
-			public void onFailure(Throwable e, JSONObject errorResponse) {
-				uploadImage(retry-1, f);
-			}
-		});
-	}
-	
-	/**
-	 * starts the image upload to the server
-	 * @param retry the number of times the client should attempt to upload the image on failures
-	 * @param f the image to be uploaded
-	 */
-	private void startUpload(final int retry, final File f) {
-		Log.d(LOG_TAG, "startUpload");
-		if (retry == 0) {
-			Log.d(LOG_TAG, "startUpload retry limit reached");
-			return;
-		}
-		
-		fClient.postImg(f, "image/jpeg", new JsonHttpResponseHandler(){
-			@Override
-			public void onSuccess(JSONObject response) {
-				Log.d(LOG_TAG, "startUpload success");
-		        if (f.exists()) {
-		            if (f.delete()) {
-		        		Log.d(LOG_TAG, "file deleted");
-		            } else {
-		        		Log.d(LOG_TAG, "file not deleted");
-		            }
-		        }
-		        sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-		        Uri.parse("file://" +  Environment.getExternalStorageDirectory())));
-			}
-			
-			@Override
-			public void onFailure(Throwable e, JSONObject errorResponse) {
-				startUpload(retry-1, f);
-			}
-		});
-	}
-	
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
 		if (requestCode == Constants.REQUEST_IMAGE_CAPTURE) {
 			switch (resultCode) {
 			case RESULT_OK:
-				uploadImage(Constants.RETRY_LIMIT, imageFile);
+				if (NetworkUtil.isConnected(this)) {
+					UploadUtils.start(this, imageFile);
+				}
+				startCamera();
 				break;
 			case RESULT_CANCELED: finish();
 				break;
