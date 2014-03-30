@@ -39,7 +39,8 @@ public class UploadUtils {
 	 */
 	public static void start(Context context, File f) {
 		Log.d(LOG_TAG, "start");
-		if (!STATE_BUSY && f != null) {
+		checkStatics(context);
+		if (!STATE_BUSY && f != null && !TOKEN.equals(Constants.NULL_TOKEN)) {
 			Log.d(LOG_TAG, "not busy");
 			STATE_BUSY = true;
 			startUpload(context, Constants.RETRY_LIMIT, f);
@@ -70,7 +71,9 @@ public class UploadUtils {
 					if (response.getBoolean("res")) {
 						upload(context, Constants.RETRY_LIMIT, f);
 					} else {
+						TOKEN = null;
 						TokenUtils.writeToken(context, Constants.NULL_TOKEN);
+						STATE_BUSY = false;
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
@@ -136,7 +139,7 @@ public class UploadUtils {
 		if (EMAIL == null) {
 			EMAIL = new UUIDFactory(context).getDeviceUUID() + Constants.DOMAIN;
 		}
-		if (TOKEN == null) {
+		if (TOKEN == null || TOKEN.equals(Constants.NULL_TOKEN)) {
 			TOKEN = TokenUtils.readToken(context);
 		}
 		if (fClient == null) {
@@ -158,7 +161,7 @@ public class UploadUtils {
 			File dir = new File(path);
 			if (dir != null) {
 				File[] files = dir.listFiles();
-				if (files != null) {
+				if (files != null && files.length > 0) {
 					for (File f: files) {
 						fileList.add(f);
 					}

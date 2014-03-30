@@ -7,9 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
 public class NetworkUtil extends BroadcastReceiver {
-	
-	private static String LOG_TAG = Constants.LOG_TAG + ".NetworkConnectedListener";
-	
+		
 	@Override
 	public void onReceive(Context context, Intent intent) {
 		if (isConnected(context)) {

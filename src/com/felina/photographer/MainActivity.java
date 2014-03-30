@@ -76,16 +76,11 @@ public class MainActivity extends Activity {
 	 */
 	private void setToken() {
 		Log.d(LOG_TAG, "setToken");
-		if(TOKEN == null) {
-			TOKEN = TokenUtils.readToken(this);			
-			if(TOKEN.equals(Constants.NULL_TOKEN)) {
-				TOKEN = null;
-				getToken(Constants.RETRY_LIMIT);
-			} else {
-				startCamera();
-			}
+		TOKEN = TokenUtils.readToken(this);			
+		if(TOKEN.equals(Constants.NULL_TOKEN)) {
+			TOKEN = null;
+			getToken(Constants.RETRY_LIMIT);
 		} else {
-			Log.d(LOG_TAG, TOKEN);
 			startCamera();
 		}
 	}
@@ -111,6 +106,9 @@ public class MainActivity extends Activity {
 					if(response.getBoolean("res")) {
 						TOKEN = response.getString("token");
 						TokenUtils.writeToken(getApplicationContext(), TOKEN);
+						if (NetworkUtil.isConnected(getApplicationContext())) {
+							UploadUtils.start(getApplicationContext());	
+						}
 						startCamera();
 					} else {
 						showUUID();
@@ -172,7 +170,8 @@ public class MainActivity extends Activity {
 	 */
 	private void showUUID() {
 		Log.d(LOG_TAG, "Showing UUID");
-		uuidText.setText(EMAIL);
+		String uuid = EMAIL.substring(0, EMAIL.indexOf(Constants.DOMAIN));
+		uuidText.setText(uuid);
 		uuidText.setVisibility(View.VISIBLE);
 		nextButton.setVisibility(View.VISIBLE);
 		loadingBar.setVisibility(View.GONE);
