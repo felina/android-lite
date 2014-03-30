@@ -223,6 +223,11 @@ public class MainActivity extends Activity {
 		});
 	}
 	
+	/**
+	 * starts the image upload to the server
+	 * @param retry the number of times the client should attempt to upload the image on failures
+	 * @param f the image to be uploaded
+	 */
 	private void startUpload(final int retry, final File f) {
 		Log.d(LOG_TAG, "startUpload");
 		if (retry == 0) {
