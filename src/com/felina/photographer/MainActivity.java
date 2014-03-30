@@ -78,15 +78,12 @@ public class MainActivity extends Activity {
 	private void setToken() {
 		Log.d(LOG_TAG, "setToken");
 		if(TOKEN == null) {
-			synchronized (MainActivity.class) {
-				SharedPreferences prefs = getSharedPreferences(Extra.TOKEN_PREF_FILE, MODE_PRIVATE);
-				TOKEN = prefs.getString(Extra.TOKEN_PREF, Constants.NULL_TOKEN);			
-				if(TOKEN.equals(Constants.NULL_TOKEN)) {
-					TOKEN = null;
-					getToken(Constants.RETRY_LIMIT);
-				} else {
-					startCamera();
-				}
+			TOKEN = TokenUtils.readToken(this);			
+			if(TOKEN.equals(Constants.NULL_TOKEN)) {
+				TOKEN = null;
+				getToken(Constants.RETRY_LIMIT);
+			} else {
+				startCamera();
 			}
 		} else {
 			Log.d(LOG_TAG, TOKEN);
@@ -104,13 +101,16 @@ public class MainActivity extends Activity {
 			Log.d(LOG_TAG, "token retry limit reached");
 			return;
 		}
+		
+		nextButton.setEnabled(false);
+		
 		fClient.token(EMAIL, new JsonHttpResponseHandler(){
 			@Override
 			public void onSuccess(JSONObject response) {
 				try {
 					if(response.getBoolean("res")) {
 						TOKEN = response.getString("token");
-						saveToken(TOKEN);
+						TokenUtils.writeToken(getApplicationContext(), TOKEN);
 						startCamera();
 					} else {
 						showUUID();
@@ -127,18 +127,6 @@ public class MainActivity extends Activity {
 				getToken(retry-1);
 			}
 		});
-	}
-	
-	/**
-	 * Saves the token to SharedPreferences
-	 * @param token The token to be saved
-	 */
-	private void saveToken(String token) {
-		Log.d(LOG_TAG, "saveToken");
-		synchronized (MainActivity.class) {
-			SharedPreferences prefs = getSharedPreferences(Extra.TOKEN_PREF_FILE, MODE_PRIVATE);
-			prefs.edit().putString(Extra.TOKEN_PREF, token).commit();
-		}
 	}
 	
 	/**
@@ -187,7 +175,7 @@ public class MainActivity extends Activity {
 		uuidText.setVisibility(View.VISIBLE);
 		nextButton.setVisibility(View.VISIBLE);
 		loadingBar.setVisibility(View.GONE);
-		saveToken(Constants.NULL_TOKEN);
+		TokenUtils.writeToken(this, Constants.NULL_TOKEN);
 	}
 	
 	/**
