@@ -93,13 +93,13 @@ public class MainActivity extends Activity {
 		Log.d(LOG_TAG, "getToken");
 		if (retry == 0) {
 			Log.d(LOG_TAG, "token retry limit reached");
-			nextButton.setEnabled(true);
+			showUUID();
 			return;
 		}
 		
-		nextButton.setEnabled(false);
+		showLoading();
 		
-		fClient.token(EMAIL, new JsonHttpResponseHandler(){
+		fClient.token(EMAIL, new JsonHttpResponseHandler() {
 			@Override
 			public void onSuccess(JSONObject response) {
 				try {
@@ -112,12 +112,13 @@ public class MainActivity extends Activity {
 						startCamera();
 					} else {
 						showUUID();
+						TokenUtils.writeToken(getApplicationContext(), Constants.NULL_TOKEN);
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
 					getToken(retry-1);
 				}
-				nextButton.setEnabled(true);
+				showUUID();
 			}
 			
 			@Override
@@ -127,15 +128,14 @@ public class MainActivity extends Activity {
 			}
 		});
 	}
+
 	
 	/**
 	 * Launches the camera to take a picture
 	 */
 	private void startCamera() {
 		Log.d(LOG_TAG, "Starting camera");
-		uuidText.setVisibility(View.GONE);
-		nextButton.setVisibility(View.GONE);
-		loadingBar.setVisibility(View.VISIBLE);
+		showLoading();
 		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		
 		if(intent.resolveActivity(getPackageManager()) != null) {
@@ -166,6 +166,15 @@ public class MainActivity extends Activity {
 	}
 	
 	/**
+	 * Shows the loading view
+	 */
+	private void showLoading() {
+		uuidText.setVisibility(View.GONE);
+		nextButton.setVisibility(View.GONE);
+		loadingBar.setVisibility(View.VISIBLE);
+	}
+	
+	/**
 	 * Displays the UUID and next button.
 	 */
 	private void showUUID() {
@@ -175,7 +184,6 @@ public class MainActivity extends Activity {
 		uuidText.setVisibility(View.VISIBLE);
 		nextButton.setVisibility(View.VISIBLE);
 		loadingBar.setVisibility(View.GONE);
-		TokenUtils.writeToken(this, Constants.NULL_TOKEN);
 	}
 	
 	@Override
