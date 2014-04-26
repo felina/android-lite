@@ -7,8 +7,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Environment;
 
 import com.felina.android.api.FelinaClient;
@@ -99,8 +97,6 @@ public class UploadUtils {
 		        if (f.exists()) {
 		        	f.delete();
 		        }
-		        context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-		        Uri.parse("file://" +  Environment.getExternalStorageDirectory())));
 		        
 		        File next = getNextFile();
 		        if (next != null) {
