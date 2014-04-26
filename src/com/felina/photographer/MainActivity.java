@@ -16,8 +16,10 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.view.Menu;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.felina.android.api.FelinaClient;
 import com.felina.photographer.Constants.Extra;
@@ -32,6 +34,7 @@ public class MainActivity extends Activity {
 	private Button nextButton;
 	private File imageFile;
 	private View loadingBar;
+	private View toastView;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -41,6 +44,7 @@ public class MainActivity extends Activity {
 		uuidText = (TextView) findViewById(R.id.uuidTxt);
 		nextButton = (Button) findViewById(R.id.nextBtn);
 		loadingBar = findViewById(R.id.loadingPanel);
+		toastView = getLayoutInflater().inflate(R.layout.tick, (ViewGroup)findViewById(R.id.toastLayout));
 		nextButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -186,6 +190,9 @@ public class MainActivity extends Activity {
 				if (NetworkUtil.isConnected(this)) {
 					UploadUtils.start(this, imageFile);
 				}
+				Toast toast = new Toast(this);
+				toast.setView(toastView);
+				toast.show();
 				startCamera();
 				break;
 			case RESULT_CANCELED: finish();
