@@ -112,8 +112,6 @@ public class UploadUtils {
 		        		Log.d(LOG_TAG, "file not deleted");
 		            }
 		        }
-		        context.sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED,
-		        Uri.parse("file://" +  Environment.getExternalStorageDirectory())));
 		        
 		        File next = getNextFile();
 		        if (next != null) {
