@@ -14,6 +14,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -97,34 +98,38 @@ public class MainActivity extends Activity {
 		
 		showLoading();
 		
-		fClient.token(EMAIL, new JsonHttpResponseHandler() {
-			@Override
-			public void onSuccess(JSONObject response) {
-				try {
-					if(response.getBoolean("res")) {
-						TOKEN = response.getString("token");
-						TokenUtils.writeToken(getApplicationContext(), TOKEN);
-						if (NetworkUtil.isConnected(getApplicationContext())) {
-							UploadUtils.start(getApplicationContext());	
+		try {
+			fClient.token(EMAIL, new JsonHttpResponseHandler() {
+				@Override
+				public void onSuccess(JSONObject response) {
+					try {
+						if(response.getBoolean("res")) {
+							TOKEN = response.getString("token");
+							TokenUtils.writeToken(getApplicationContext(), TOKEN);
+							if (NetworkUtil.isConnected(getApplicationContext())) {
+								UploadUtils.start(getApplicationContext());	
+							}
+							startCamera();
+						} else {
+							showUUID();
+							TokenUtils.writeToken(getApplicationContext(), Constants.NULL_TOKEN);
 						}
-						startCamera();
-					} else {
-						showUUID();
-						TokenUtils.writeToken(getApplicationContext(), Constants.NULL_TOKEN);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						getToken(retry-1);
 					}
-				} catch (JSONException e) {
+					showUUID();
+				}
+				
+				@Override
+				public void onFailure(Throwable e, JSONObject errorResponse) {
 					e.printStackTrace();
 					getToken(retry-1);
 				}
-				showUUID();
-			}
-			
-			@Override
-			public void onFailure(Throwable e, JSONObject errorResponse) {
-				e.printStackTrace();
-				getToken(retry-1);
-			}
-		});
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	

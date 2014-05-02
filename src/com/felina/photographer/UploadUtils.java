@@ -1,6 +1,7 @@
 package com.felina.photographer;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import org.json.JSONException;
@@ -56,28 +57,36 @@ public class UploadUtils {
 			return;
 		}
 				
-		fClient.login(EMAIL, TOKEN, new JsonHttpResponseHandler(){
-			@Override
-			public void onSuccess(JSONObject response) {
-				try {
-					if (response.getBoolean("res")) {
-						upload(context, Constants.RETRY_LIMIT, f);
-					} else {
-						TOKEN = null;
-						TokenUtils.writeToken(context, Constants.NULL_TOKEN);
-						STATE_BUSY = false;
+		try {
+			fClient.login(EMAIL, TOKEN, new JsonHttpResponseHandler(){
+				@Override
+				public void onSuccess(JSONObject response) {
+					try {
+						if (response.getBoolean("res")) {
+							upload(context, Constants.RETRY_LIMIT, f);
+						} else {
+							TOKEN = null;
+							TokenUtils.writeToken(context, Constants.NULL_TOKEN);
+							STATE_BUSY = false;
+						}
+					} catch (JSONException e) {
+						e.printStackTrace();
+						startUpload(context, retry-1, f);
 					}
-				} catch (JSONException e) {
-					e.printStackTrace();
+				}
+				
+				@Override
+				public void onFailure(Throwable e, JSONObject errorResponse) {
 					startUpload(context, retry-1, f);
 				}
-			}
-			
-			@Override
-			public void onFailure(Throwable e, JSONObject errorResponse) {
-				startUpload(context, retry-1, f);
-			}
-		});
+			});
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
