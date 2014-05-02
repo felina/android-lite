@@ -1,6 +1,7 @@
 package com.felina.photographer;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import org.json.JSONException;
@@ -8,14 +9,12 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
 
 import com.felina.android.api.FelinaClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 
 public class UploadUtils {
 	
-	private static String LOG_TAG = Constants.LOG_TAG + ".UploadUtils";
 	private static FelinaClient fClient;
 	private static String EMAIL;
 	private static String TOKEN;
@@ -36,10 +35,8 @@ public class UploadUtils {
 	 * @param f file to be uploaded
 	 */
 	public static void start(Context context, File f) {
-		Log.d(LOG_TAG, "start");
 		checkStatics(context);
 		if (!STATE_BUSY && f != null && !TOKEN.equals(Constants.NULL_TOKEN)) {
-			Log.d(LOG_TAG, "not busy");
 			STATE_BUSY = true;
 			startUpload(context, Constants.RETRY_LIMIT, f);
 		}
@@ -52,38 +49,44 @@ public class UploadUtils {
 	 * @param f
 	 */
 	private static void startUpload(final Context context, final int retry, final File f) {
-		Log.d(LOG_TAG, "startUpload");
 		
 		checkStatics(context);
 		
 		if (retry == 0 || !NetworkUtil.isConnected(context) || TOKEN.equals(Constants.NULL_TOKEN)){
-			Log.d(LOG_TAG, "startUpload retry limit reached or not connected or null token");
 			STATE_BUSY = false;
 			return;
 		}
 				
-		fClient.login(EMAIL, TOKEN, new JsonHttpResponseHandler(){
-			@Override
-			public void onSuccess(JSONObject response) {
-				try {
-					if (response.getBoolean("res")) {
-						upload(context, Constants.RETRY_LIMIT, f);
-					} else {
-						TOKEN = null;
-						TokenUtils.writeToken(context, Constants.NULL_TOKEN);
-						STATE_BUSY = false;
+		try {
+			fClient.login(EMAIL, TOKEN, new JsonHttpResponseHandler(){
+				@Override
+				public void onSuccess(JSONObject response) {
+					try {
+						if (response.getBoolean("res")) {
+							upload(context, Constants.RETRY_LIMIT, f);
+						} else {
+							TOKEN = null;
+							TokenUtils.writeToken(context, Constants.NULL_TOKEN);
+							STATE_BUSY = false;
+						}
+					} catch (JSONException e) {
+						e.printStackTrace();
+						startUpload(context, retry-1, f);
 					}
-				} catch (JSONException e) {
-					e.printStackTrace();
+				}
+				
+				@Override
+				public void onFailure(Throwable e, JSONObject errorResponse) {
 					startUpload(context, retry-1, f);
 				}
-			}
-			
-			@Override
-			public void onFailure(Throwable e, JSONObject errorResponse) {
-				startUpload(context, retry-1, f);
-			}
-		});
+			});
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -92,9 +95,7 @@ public class UploadUtils {
 	 * @param f the image to be uploaded
 	 */
 	private static void upload(final Context context, final int retry, final File f) {
-		Log.d(LOG_TAG, "upload");
 		if (retry == 0 || !NetworkUtil.isConnected(context)) {
-			Log.d(LOG_TAG, "upload retry limit reached or not connected");
 			STATE_BUSY = false;
 			return;
 		}
@@ -102,18 +103,12 @@ public class UploadUtils {
 		fClient.postImg(f, "image/jpeg", new JsonHttpResponseHandler(){
 			@Override
 			public void onSuccess(JSONObject response) {
-				Log.d(LOG_TAG, "upload success");
 		        if (f.exists()) {
-		            if (f.delete()) {
-		        		Log.d(LOG_TAG, "file deleted");
-		            } else {
-		        		Log.d(LOG_TAG, "file not deleted");
-		            }
+		        	f.delete();
 		        }
 		        
 		        File next = getNextFile();
 		        if (next != null) {
-		        	Log.d(LOG_TAG, next.getAbsolutePath());
 		        	startUpload(context, Constants.RETRY_LIMIT, next);
 		        } else {
 		        	STATE_BUSY = false;	

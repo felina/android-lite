@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,7 +27,6 @@ import com.loopj.android.http.JsonHttpResponseHandler;
 
 public class MainActivity extends Activity {
 	
-	private static String LOG_TAG = Constants.LOG_TAG +".Main";
 	private static String EMAIL;
 	private static String TOKEN;
 	private static FelinaClient fClient;
@@ -47,7 +45,7 @@ public class MainActivity extends Activity {
 		nextButton = (Button) findViewById(R.id.nextBtn);
 		loadingBar = findViewById(R.id.loadingPanel);
 		toastView = getLayoutInflater().inflate(R.layout.tick, (ViewGroup)findViewById(R.id.toastLayout));
-		
+
 		nextButton.setOnClickListener(new View.OnClickListener() {
 			
 			@Override
@@ -58,7 +56,6 @@ public class MainActivity extends Activity {
 		
 		File storagePath = new File(Environment.getExternalStorageDirectory() + File.separator + Constants.STORAGE_FOLDER);
 		if (!storagePath.exists()) {
-			Log.d(LOG_TAG, "storagePath does not exist");
 			storagePath.mkdirs();
 		}
 		
@@ -80,7 +77,6 @@ public class MainActivity extends Activity {
 	 * Failing that calls getToken()
 	 */
 	private void setToken() {
-		Log.d(LOG_TAG, "setToken");
 		TOKEN = TokenUtils.readToken(this);			
 		if(TOKEN.equals(Constants.NULL_TOKEN)) {
 			TOKEN = null;
@@ -95,43 +91,45 @@ public class MainActivity extends Activity {
 	 * Failing that it displays the UUID
 	 */
 	private void getToken(final int retry) {
-		Log.d(LOG_TAG, "getToken");
 		if (retry == 0) {
-			Log.d(LOG_TAG, "token retry limit reached");
 			showUUID();
 			return;
 		}
 		
 		showLoading();
 		
-		fClient.token(EMAIL, new JsonHttpResponseHandler() {
-			@Override
-			public void onSuccess(JSONObject response) {
-				try {
-					if(response.getBoolean("res")) {
-						TOKEN = response.getString("token");
-						TokenUtils.writeToken(getApplicationContext(), TOKEN);
-						if (NetworkUtil.isConnected(getApplicationContext())) {
-							UploadUtils.start(getApplicationContext());	
+		try {
+			fClient.token(EMAIL, new JsonHttpResponseHandler() {
+				@Override
+				public void onSuccess(JSONObject response) {
+					try {
+						if(response.getBoolean("res")) {
+							TOKEN = response.getString("token");
+							TokenUtils.writeToken(getApplicationContext(), TOKEN);
+							if (NetworkUtil.isConnected(getApplicationContext())) {
+								UploadUtils.start(getApplicationContext());	
+							}
+							startCamera();
+						} else {
+							showUUID();
+							TokenUtils.writeToken(getApplicationContext(), Constants.NULL_TOKEN);
 						}
-						startCamera();
-					} else {
-						showUUID();
-						TokenUtils.writeToken(getApplicationContext(), Constants.NULL_TOKEN);
+					} catch (JSONException e) {
+						e.printStackTrace();
+						getToken(retry-1);
 					}
-				} catch (JSONException e) {
+					showUUID();
+				}
+				
+				@Override
+				public void onFailure(Throwable e, JSONObject errorResponse) {
 					e.printStackTrace();
 					getToken(retry-1);
 				}
-				showUUID();
-			}
-			
-			@Override
-			public void onFailure(Throwable e, JSONObject errorResponse) {
-				e.printStackTrace();
-				getToken(retry-1);
-			}
-		});
+			});
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	
@@ -139,7 +137,6 @@ public class MainActivity extends Activity {
 	 * Launches the camera to take a picture
 	 */
 	private void startCamera() {
-		Log.d(LOG_TAG, "Starting camera");
 		showLoading();
 		Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 		
@@ -183,7 +180,6 @@ public class MainActivity extends Activity {
 	 * Displays the UUID and next button.
 	 */
 	private void showUUID() {
-		Log.d(LOG_TAG, "Showing UUID");
 		String uuid = EMAIL.substring(0, EMAIL.indexOf(Constants.DOMAIN));
 		uuidText.setText(uuid);
 		uuidText.setVisibility(View.VISIBLE);
