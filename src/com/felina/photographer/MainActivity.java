@@ -20,6 +20,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import co.darwinapp.photographer.R;
 
 import com.felina.android.api.FelinaClient;
 import com.felina.photographer.Constants.Extra;

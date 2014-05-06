@@ -30,7 +30,7 @@ public class UUIDFactory {
 							
 	                        TelephonyManager mManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
 	                        
-	                        if(mManager != null) {
+	                        if(mManager != null && mManager.getDeviceId() != null) {
 	                        	final String deviceId = mManager.getDeviceId();
 	                        	if (deviceId != null) {
 	                        		uuid = UUID.nameUUIDFromBytes(deviceId.getBytes("utf8"));
@@ -48,7 +48,11 @@ public class UUIDFactory {
 							System.out.println(e);
 						}
 						
-						prefs.edit().putString(Extra.UUID_PREF, uuid.toString() ).commit();
+						if(uuid==null) {
+							uuid = UUID.randomUUID();
+						} else {
+							prefs.edit().putString(Extra.UUID_PREF, uuid.toString() ).commit();
+						}
 					}
 				}
 			}
